@@ -1,11 +1,11 @@
-import selenium
 from selenium import webdriver
-import chromedriver_autoinstaller
-from selenium.webdriver.chrome.options import Options
-import time
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.common.keys import Keys
 
 sets = {
-    'url': 'kahoot.it',
+    'url': 'https://www.kahoot.it',
     'game-pin-field-xpath': '//*[@id="game-input"]',
     'join-button-xpath': '//*[@id="root"]/div[1]/div/div/div/div[3]/div[2]/main/div/form/button',
     'nickname-field-xpath': '//*[@id="nickname"]',
@@ -15,23 +15,37 @@ sets = {
 
 }
 
-
-
-
 class Bot:
     def __init__(self, idd, name):
         self.idd = idd
         self.name = name
-        options = Options()
-        options.add_argument("excludeSwitches")
-        options.add_argument("enable-logging")
-        self.driver = webdriver.Chrome(chromedriver_autoinstaller.install(), options=options)
+        options = webdriver.ChromeOptions() 
+        options.add_experimental_option("excludeSwitches", ["enable-logging"])
+        self.driver = webdriver.Chrome(options=options, executable_path='.\\chromedriver.exe')
+        self.driver.get(sets['url'])
+
+    def load_element(self, path, by, ex=True):
+        try:
+            element = WebDriverWait(self.driver, 5000).until(EC.presence_of_element_located((by, path)))
+            return element
+        except Exception as e:
+            if ex:
+                print(f'couldnt find {path} {e}')
+                self.driver.quit()
+                exit(1)
+            return False
 
     def start(self):
-        self.driver.get(sets['url'])
-        time.sleep(3)
-        self.driver.close()
-        self.driver.exit()
+        self.pin_field = self.load_element(sets['game-pin-field-xpath'], By.XPATH)
+        self.pin_field.clear()
+        self.pin_field.send_keys(self.idd)
+        self.pin_field.send_keys(Keys.RETURN)
 
-b = Bot(None, None)
+        self.name_field = self.load_element(sets['nickname-field-xpath'], By.XPATH)
+        self.name_field.clear()
+        self.name_field.send_keys(self.name)
+        self.name_field.send_keys(Keys.RETURN)
+        input()
+
+b = Bot('6754', 'saghsdf')
 b.start()
